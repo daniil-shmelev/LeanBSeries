@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this library in your work, please cite it as below."
+title: "LeanBSeries: rooted trees, Butcher series and Runge-Kutta order theory in Lean 4"
+authors:
+  - family-names: Shmelev
+    given-names: Daniil
+year: 2026
+url: "https://github.com/daniil-shmelev/LeanBSeries"
+license: Apache-2.0
