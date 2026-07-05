@@ -37,6 +37,13 @@ jobs:
           lake-package-directory: lean-b-series
           use-mathlib-cache: true
 
+      - name: Cache documentation build
+        uses: actions/cache@v4
+        with:
+          path: lean-b-series/docbuild/.lake
+          key: docs-${{ hashFiles('lean-b-series/lean-toolchain') }}-${{ hashFiles('lean-b-series/lake-manifest.json') }}
+          restore-keys: docs-${{ hashFiles('lean-b-series/lean-toolchain') }}-
+
       - name: Generate API documentation
         working-directory: lean-b-series/docbuild
         run: |
