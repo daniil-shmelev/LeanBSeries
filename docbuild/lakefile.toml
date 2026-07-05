@@ -1,0 +1,16 @@
+# Documentation-only subpackage: builds doc-gen4 API docs for the parent
+# package without adding doc-gen4 to its dependencies.
+# Usage: cd docbuild && lake update doc-gen4 && lake build BSeries:docs
+name = "docbuild"
+reservoir = false
+version = "0.1.0"
+packagesDir = "../.lake/packages"
+
+[[require]]
+name = "LeanBSeries"
+path = "../"
+
+[[require]]
+scope = "leanprover"
+name = "doc-gen4"
+rev = "v4.32.0-rc1"

@@ -1,0 +1,61 @@
+name: Docs
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build docs (doc-gen4)
+    runs-on: ubuntu-latest
+    steps:
+      # Side-by-side checkout: the lakefile requires ../lean-rough-paths.
+      - name: Check out LeanBSeries
+        uses: actions/checkout@v4
+        with:
+          path: lean-b-series
+
+      - name: Check out LeanRoughPaths (sibling dependency)
+        uses: actions/checkout@v4
+        with:
+          repository: daniil-shmelev/LeanRoughPaths
+          path: lean-rough-paths
+
+      - name: Build library (with Mathlib cache)
+        uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: lean-b-series
+          use-mathlib-cache: true
+
+      - name: Generate API documentation
+        working-directory: lean-b-series/docbuild
+        run: |
+          MATHLIB_NO_CACHE_ON_UPDATE=1 lake update doc-gen4
+          lake build BSeries:docs
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: lean-b-series/docbuild/.lake/build/doc
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
