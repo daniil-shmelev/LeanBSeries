@@ -125,6 +125,8 @@ theorem convolutionCoeff_toCharacter_congr_of_agree {a a' b b' : Series R} {n : 
   intro φ
   refine Quotient.inductionOn φ ?_
   intro ts hts
+  change convolutionCoeff (Series.toCharacter a) (Series.toCharacter b) (ts : RootedForest) =
+    convolutionCoeff (Series.toCharacter a') (Series.toCharacter b') (ts : RootedForest)
   rw [convolutionCoeff, convolutionCoeff]
   change
     ForestTensorAlgebra.evalByCharacters (Series.toCharacter a) (Series.toCharacter b)
@@ -356,11 +358,11 @@ theorem toCharacter_convolution_ofForest_singleton_ofPTree
 theorem toCharacter_convolution (a b : Series R) :
     toCharacter (convolution a b) =
       ForestAlgebra.Character.convolution (toCharacter a) (toCharacter b) := by
-  ext τ
+  apply ForestAlgebra.Character.ext
+  intro φ
   change
-    (toCharacter (convolution a b)).evalForest (RootedForest.singleton τ) =
-      (ForestAlgebra.Character.convolution (toCharacter a) (toCharacter b)).evalForest
-        (RootedForest.singleton τ)
+    (toCharacter (convolution a b)).evalForest φ =
+      (ForestAlgebra.Character.convolution (toCharacter a) (toCharacter b)).evalForest φ
   rw [toCharacter_evalForest, forestCoeff_convolution,
     ForestAlgebra.Character.convolution_evalForest]
   rfl

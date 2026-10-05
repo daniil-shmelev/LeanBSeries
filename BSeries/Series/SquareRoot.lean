@@ -223,7 +223,8 @@ variable {R : Type u} [CommRing R] [Invertible (2 : R)]
 
 /-- The convolution square root of a character, as a linear functional. -/
 noncomputable def sqrtFunctional (ψ : Character R) : LinearFunctional R :=
-  Finsupp.linearCombination R (RootedForest.sqrtCoeff ψ)
+  (Finsupp.linearCombination R (RootedForest.sqrtCoeff ψ)).comp
+    (AddMonoidAlgebra.coeffLinearEquiv R).toLinearMap
 
 @[simp]
 theorem sqrtFunctional_ofForest (ψ : Character R) (φ : RootedForest) :
@@ -311,7 +312,7 @@ theorem convolution_sqrtFunctional (ψ : Character R) :
   apply LinearMap.ext
   intro x
   refine AddMonoidAlgebra.induction_on (x := x)
-    (p := fun y =>
+    (motive := fun y =>
       LinearFunctional.convolution (sqrtFunctional ψ) (sqrtFunctional ψ) y =
         LinearFunctional.ofCharacter ψ y) ?_ ?_ ?_
   · intro φ
@@ -435,7 +436,8 @@ variable {R : Type u} [CommRing R]
 
 /-- The left convolution inverse of a normalized linear functional. -/
 noncomputable def leftInverse (f : LinearFunctional R) : LinearFunctional R :=
-  Finsupp.linearCombination R (RootedForest.leftInverseCoeff f)
+  (Finsupp.linearCombination R (RootedForest.leftInverseCoeff f)).comp
+    (AddMonoidAlgebra.coeffLinearEquiv R).toLinearMap
 
 @[simp]
 theorem leftInverse_ofForest (f : LinearFunctional R) (φ : RootedForest) :
@@ -449,7 +451,8 @@ theorem leftInverse_ofForest (f : LinearFunctional R) (φ : RootedForest) :
 
 /-- The right convolution inverse of a normalized linear functional. -/
 noncomputable def rightInverse (f : LinearFunctional R) : LinearFunctional R :=
-  Finsupp.linearCombination R (RootedForest.rightInverseCoeff f)
+  (Finsupp.linearCombination R (RootedForest.rightInverseCoeff f)).comp
+    (AddMonoidAlgebra.coeffLinearEquiv R).toLinearMap
 
 @[simp]
 theorem rightInverse_ofForest (f : LinearFunctional R) (φ : RootedForest) :
@@ -466,7 +469,7 @@ theorem convolution_leftInverse (f : LinearFunctional R)
     convolution (leftInverse f) f = LinearFunctional.counit R := by
   apply LinearMap.ext
   intro x
-  refine AddMonoidAlgebra.induction_on (x := x) (p := fun y =>
+  refine AddMonoidAlgebra.induction_on (x := x) (motive := fun y =>
     convolution (leftInverse f) f y = LinearFunctional.counit R y) ?_ ?_ ?_
   · intro φ
     change convolution (leftInverse f) f (ofForest (R := R) φ) =
@@ -506,7 +509,7 @@ theorem convolution_rightInverse (f : LinearFunctional R)
     convolution f (rightInverse f) = LinearFunctional.counit R := by
   apply LinearMap.ext
   intro x
-  refine AddMonoidAlgebra.induction_on (x := x) (p := fun y =>
+  refine AddMonoidAlgebra.induction_on (x := x) (motive := fun y =>
     convolution f (rightInverse f) y = LinearFunctional.counit R y) ?_ ?_ ?_
   · intro φ
     change convolution f (rightInverse f) (ofForest (R := R) φ) =
@@ -560,7 +563,7 @@ theorem compGradingInvolution_counit :
     compGradingInvolution (LinearFunctional.counit R) = LinearFunctional.counit R := by
   apply LinearMap.ext
   intro x
-  refine AddMonoidAlgebra.induction_on (x := x) (p := fun y =>
+  refine AddMonoidAlgebra.induction_on (x := x) (motive := fun y =>
     compGradingInvolution (LinearFunctional.counit R) y = LinearFunctional.counit R y) ?_ ?_ ?_
   · intro φ
     change compGradingInvolution (LinearFunctional.counit R) (ofForest (R := R) φ) =
@@ -601,7 +604,7 @@ theorem sqrtFunctional_unique (ψ : Character R) {f : LinearFunctional R}
   apply LinearMap.ext
   intro x
   refine AddMonoidAlgebra.induction_on (x := x)
-    (p := fun y => f y = sqrtFunctional ψ y) ?_ ?_ ?_
+    (motive := fun y => f y = sqrtFunctional ψ y) ?_ ?_ ?_
   · intro φ
     change f (ofForest (R := R) φ) = sqrtFunctional ψ (ofForest (R := R) φ)
     rw [sqrtFunctional_ofForest]

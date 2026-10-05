@@ -160,40 +160,18 @@ private theorem character_apply_eq_of_agree [Field R]
     {χ ξ : ForestAlgebra.Character R} {n : ℕ}
     (hagree : ∀ φ : RootedForest, RootedForest.order φ ≤ n →
       χ.evalForest φ = ξ.evalForest φ) {x : ForestAlgebra R}
-    (hsupp : ∀ ψ ∈ x.support, RootedForest.order ψ ≤ n) :
+    (hsupp : ∀ ψ ∈ x.coeff.support, RootedForest.order ψ ≤ n) :
     χ x = ξ x := by
   classical
-  induction x using Finsupp.induction with
-  | zero =>
-      show χ (0 : ForestAlgebra R) = ξ (0 : ForestAlgebra R)
-      rw [map_zero, map_zero]
-  | single_add ψ b f hψf hb ih =>
-      have hsupport : (Finsupp.single ψ b + f).support =
-          {ψ} ∪ f.support := by
-        rw [Finsupp.support_add_eq (by
-          rw [Finsupp.support_single ψ hb]
-          simpa using hψf), Finsupp.support_single ψ hb]
-      have hψn : RootedForest.order ψ ≤ n := by
-        refine hsupp ψ ?_
-        rw [hsupport]
-        exact Finset.mem_union_left _ (Finset.mem_singleton_self ψ)
-      have hfn : ∀ ψ' ∈ f.support, RootedForest.order ψ' ≤ n := by
-        intro ψ' hψ'
-        refine hsupp ψ' ?_
-        rw [hsupport]
-        exact Finset.mem_union_right _ hψ'
-      have hsingle : (AddMonoidAlgebra.single ψ b : ForestAlgebra R) =
-          b • ForestAlgebra.ofForest ψ := by
-        rw [ForestAlgebra.ofForest, AddMonoidAlgebra.smul_single', mul_one]
-      show χ ((AddMonoidAlgebra.single ψ b : ForestAlgebra R) +
-          (id f : ForestAlgebra R)) =
-        ξ ((AddMonoidAlgebra.single ψ b : ForestAlgebra R) +
-          (id f : ForestAlgebra R))
-      rw [map_add, map_add, hsingle, map_smul, map_smul]
-      simp only [id_eq]
-      rw [ih hfn]
-      exact congrArg (· + ξ f)
-        (congrArg (HSMul.hSMul b) (hagree ψ hψn))
+  conv_lhs => rw [← AddMonoidAlgebra.sum_coeff_single x]
+  conv_rhs => rw [← AddMonoidAlgebra.sum_coeff_single x]
+  simp only [Finsupp.sum, map_sum]
+  refine Finset.sum_congr rfl fun ψ hψ => ?_
+  have hsingle : (AddMonoidAlgebra.single ψ (x.coeff ψ) : ForestAlgebra R) =
+      x.coeff ψ • ForestAlgebra.ofForest ψ := by
+    rw [ForestAlgebra.ofForest, AddMonoidAlgebra.smul_single', mul_one]
+  rw [hsingle, map_smul, map_smul]
+  exact congrArg (HSMul.hSMul (x.coeff ψ)) (hagree ψ (hsupp ψ hψ))
 
 /--
 The adjoint preserves the order of a B-series method: if a character agrees
@@ -209,7 +187,7 @@ theorem adjointCharacter_agree_exact [Field R] [CharZero R]
         (toCharacter (exact R)).evalForest φ := by
   intro φ hφ
   rw [ForestAlgebra.Character.adjointCharacter_evalForest]
-  have hs : ∀ ψ ∈ (RootedForest.antipode (R := R) φ).support,
+  have hs : ∀ ψ ∈ (RootedForest.antipode (R := R) φ).coeff.support,
       RootedForest.order ψ ≤ n := fun ψ hψ => by
     rw [RootedForest.order_eq_of_mem_support_antipode hψ]
     exact hφ
@@ -251,7 +229,7 @@ theorem adjointCharacter_evalForest_congr [Field R]
   intro φ hφ
   rw [ForestAlgebra.Character.adjointCharacter_evalForest,
     ForestAlgebra.Character.adjointCharacter_evalForest]
-  have hs : ∀ ψ ∈ (RootedForest.antipode (R := R) φ).support,
+  have hs : ∀ ψ ∈ (RootedForest.antipode (R := R) φ).coeff.support,
       RootedForest.order ψ ≤ n := fun ψ hψ => by
     rw [RootedForest.order_eq_of_mem_support_antipode hψ]
     exact hφ

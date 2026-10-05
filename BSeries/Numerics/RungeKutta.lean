@@ -476,7 +476,8 @@ theorem treeStageWeight_graft (rk : RungeKutta ι R) (φ : RootedForest) (i : ι
     treeStageWeight rk (RootedForest.graft φ) i = forestStageWeight rk φ i := by
   refine Quotient.inductionOn φ ?_
   intro ts
-  simpa [RootedForest.graft] using stageWeightList_out rk ts i
+  change treeStageWeight rk (RootedForest.graft (ts : RootedForest)) i = forestStageWeight rk (ts : RootedForest) i
+  simpa only [RootedForest.graft_coe, treeStageWeight_ofPTree, stageWeight_node] using stageWeightList_out rk ts i
 
 @[simp]
 theorem treeStageWeight_branches (rk : RungeKutta ι R) (τ : RootedTree) (i : ι) :

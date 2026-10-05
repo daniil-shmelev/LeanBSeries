@@ -440,7 +440,9 @@ theorem treeStageWeight_graft (rk : LabelledRungeKutta α ι R)
     treeStageWeight rk (LRootedForest.graft a φ) i = forestStageWeight rk φ i := by
   refine Quotient.inductionOn φ ?_
   intro ts
-  simpa [LRootedForest.graft] using stageWeightList_out rk ts i
+  change treeStageWeight rk (LRootedForest.graft a (ts : LRootedForest α)) i = _
+  rw [LRootedForest.graft_coe, treeStageWeight_ofPLTree, stageWeight_node]
+  exact stageWeightList_out rk ts i
 
 @[simp]
 theorem treeStageWeight_branches (rk : LabelledRungeKutta α ι R)
@@ -583,21 +585,8 @@ theorem forestWeight_comapMapLabels {β : Type x} (f : α → β)
     (rk : LabelledRungeKutta β ι R) (φ : LRootedForest α) :
     forestWeight (comapMapLabels f rk) φ =
       forestWeight rk (LRootedForest.mapLabels f φ) := by
-  refine Quotient.inductionOn φ ?_
-  intro ts
-  induction ts with
-  | nil =>
-      simp [forestWeight, LRootedForest.mapLabels]
-  | cons τ ts ih =>
-      have htail :
-          (List.map (fun x => treeWeight rk (LRootedTree.map f x)) ts).prod =
-            (List.map (treeWeight rk ∘ LRootedTree.map f) ts).prod := by
-        apply congrArg List.prod
-        apply List.map_congr_left
-        intro σ _hσ
-        rfl
-      simp [forestWeight, LRootedForest.mapLabels, treeWeight_comapMapLabels f rk,
-        htail]
+  simp only [forestWeight, LRootedForest.mapLabels, Multiset.map_map,
+    Function.comp_def, treeWeight_comapMapLabels]
 
 theorem forestWeight_comapConstLabel (a : α)
     (rk : LabelledRungeKutta α ι R) (φ : RootedForest) :

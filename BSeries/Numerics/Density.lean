@@ -591,8 +591,8 @@ theorem exists_rk_treeWeight {R : Type w} [Field R] [Infinite R] :
       (fun t : T₀ => RootedTree.order (t : RootedTree) = d) :=
     Finset.mem_filter.2 ⟨Finset.mem_univ _, hd.symm⟩
   have hcoeff := congrArg
-    (MvPolynomial.coeff
-      (Multiset.toFinsupp (RootedTree.branches (t₀ : RootedTree)))) hQ0
+    (fun p : MvPolynomial RootedTree R =>
+      p.coeff (Multiset.toFinsupp (RootedTree.branches (t₀ : RootedTree)))) hQ0
   rw [hQ] at hcoeff
   rw [MvPolynomial.coeff_sum] at hcoeff
   rw [Finset.sum_eq_single t₀ (fun t ht hne' => ?_) (fun h => absurd ht₀mem h)]

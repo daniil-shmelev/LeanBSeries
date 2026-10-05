@@ -155,7 +155,8 @@ variable {R : Type u} [CommRing R] (ψ : Character R) (n : ℕ)
 /-- The `n`-th root of a character, as a linear functional
 (arXiv:2507.21006, Theorem 6.1). -/
 noncomputable def nthRootFunctional : LinearFunctional R :=
-  Finsupp.linearCombination R (RootedForest.rootData ψ n 1)
+  (Finsupp.linearCombination R (RootedForest.rootData ψ n 1)).comp
+    (AddMonoidAlgebra.coeffLinearEquiv R).toLinearMap
 
 @[simp]
 theorem nthRootFunctional_ofForest (φ : RootedForest) :

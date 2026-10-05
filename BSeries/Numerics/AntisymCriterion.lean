@@ -133,6 +133,27 @@ theorem hasAntisymOrder_iff_weight_compose_eq {ι : Type} [Fintype ι]
       exact h1
     exact ForestAlgebra.Character.evalForest_congr_of_tree_congr htree φ hφ
 
+/-- Agreement with the adjoint implies the corresponding antisymmetric order. -/
+theorem hasAntisymOrder_of_weight_adjoint_eq {ι : Type*} [Fintype ι]
+    {R : Type*} [Field R] [CharZero R] [Invertible (2 : R)]
+    (rk : RungeKutta ι R) (m : ℕ)
+    (h : ∀ t : PTree, PTree.order t ≤ m → weight (adjointScheme rk) t = weight rk t) :
+    ForestAlgebra.Character.HasAntisymOrder (Series.toCharacter (series rk)) m := by
+  have hforest : ∀ φ : RootedForest, RootedForest.order φ ≤ m →
+      (Series.toCharacter (series rk)).evalForest φ =
+        (Series.toCharacter (series (adjointScheme rk))).evalForest φ := by
+    apply ForestAlgebra.Character.evalForest_congr_of_tree_congr
+    intro τ hτ
+    refine Quotient.inductionOn τ (fun t hτ => ?_) hτ
+    rw [show (⟦t⟧ : RootedTree) = RootedTree.ofPTree t from rfl]
+    simp only [toCharacter_series_evalForest, forestWeight_singleton, treeWeight_ofPTree]
+    apply (h t _).symm
+    change RootedTree.order (RootedTree.ofPTree t) ≤ m at hτ
+    simpa only [RootedTree.order_ofPTree] using hτ
+  rw [ForestAlgebra.Character.hasAntisymOrder_iff_convolution_agree,
+    ← toCharacter_series_adjointScheme]
+  exact Series.convolution_evalForest_congr hforest (fun _ _ => rfl)
+
 instance : Invertible (2 : ℚ) := invertibleOfNonzero (by norm_num)
 
 end RungeKutta

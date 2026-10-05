@@ -146,6 +146,9 @@ theorem flowChar_nil [Field R] {s : ℕ} (ls : LowStorage s R) :
   | 0 => by rw [flowChar]; simp
   | e + 1 => by
       rw [flowChar]
+      simp only [List.length_nil, show List.range 1 = [0] from rfl,
+        List.map_cons, List.map_nil, List.sum_cons, List.sum_nil]
+      dsimp only [List.drop, List.attach, List.attachWith, List.pmap]
       simp [flowChar_nil ls e]
 
 @[simp]
@@ -181,6 +184,7 @@ theorem flowChar_bullet [Field R] {s : ℕ} (ls : LowStorage s R) :
         List.take_zero, List.drop_zero, List.take_succ_cons, List.take_nil,
         List.drop_succ_cons, List.drop_nil, List.length_cons,
         List.length_nil, List.attach_nil, flowChar_nil ls]
+      dsimp only [List.drop, List.attach, List.attachWith, List.pmap]
       rw [flowChar_bullet ls e]
       rw [List.range_succ, List.map_append, List.sum_append]
       simp [List.attach_cons, PTree.children, PTree.bullet, Nat.factorial]
@@ -294,6 +298,7 @@ theorem flowChar_chain2 [Field R] {s : ℕ} (ls : LowStorage s R) :
         List.take_zero, List.drop_zero, List.take_succ_cons, List.take_nil,
         List.drop_succ_cons, List.drop_nil, List.length_cons,
         List.length_nil, List.attach_nil, flowChar_nil ls]
+      dsimp only [List.drop, List.attach, List.attachWith, List.pmap]
       rw [flowChar_chain2 ls e]
       rw [List.range_succ, List.map_append, List.sum_append]
       simp [List.attach_cons, PTree.children, PTree.chain2, Nat.factorial]

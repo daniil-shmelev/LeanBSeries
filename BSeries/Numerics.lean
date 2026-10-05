@@ -1,3 +1,4 @@
+import BSeries.Numerics.EESCosineOrder
 import BSeries.Numerics.EES27
 import BSeries.Numerics.Williamson
 import BSeries.Numerics.AdjointScheme

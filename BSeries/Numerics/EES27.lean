@@ -20,15 +20,9 @@ with the stage matrix recorded below; the concrete representatives at
 `x = (2-√2)/4` and `x = (5-3√2)/14` of the paper arise by
 specialisation.
 
-The order conditions are verified **at the generic parameter**: taking
-`R := CRatFunc Qsqrt2`, `s := √2` and `x := X` an indeterminate, the
-conditions become identities of rational functions over `ℚ(√2)`, checked
-by `native_decide`. In this sense the results hold for the whole family:
-
-* `EES(2,7;X)` is explicit, has order exactly two, and has antisymmetric
-  order exactly seven (`isEES_ees27_generic`);
-* the family is Williamson 2N, with two-register coefficients read off
-  the tableau (`isWilliamson2N_ees27_generic`).
+The representative at `x = (5-3√2)/14` has checked exact orders two and
+seven (`isEES_ees27r`) and Williamson 2N storage (`isWilliamson2N_ees27r`).
+The cosine representative belongs to the general family in `EESCosineOrder`.
 -/
 
 namespace BSeries

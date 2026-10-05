@@ -78,7 +78,7 @@ theorem gradingInvolution_ofForest [CommRing R] (φ : RootedForest) :
 theorem gradingInvolution_gradingInvolution [CommRing R] (x : ForestAlgebra R) :
     gradingInvolution R (gradingInvolution R x) = x := by
   refine AddMonoidAlgebra.induction_on (x := x)
-    (p := fun y => gradingInvolution R (gradingInvolution R y) = y) ?_ ?_ ?_
+    (motive := fun y => gradingInvolution R (gradingInvolution R y) = y) ?_ ?_ ?_
   · intro φ
     change
       gradingInvolution R (gradingInvolution R (ofForest (R := R) φ)) =
@@ -134,7 +134,7 @@ theorem convolution_compGradingInvolution [CommRing R]
   apply LinearMap.ext
   intro x
   refine AddMonoidAlgebra.induction_on (x := x)
-    (p := fun y =>
+    (motive := fun y =>
       convolution (compGradingInvolution f) (compGradingInvolution g) y =
         compGradingInvolution (convolution f g) y) ?_ ?_ ?_
   · intro φ

@@ -127,6 +127,9 @@ theorem convolutionCoeff_toCharacter_congr_of_agree {a a' b b' : LSeries α R} {
   intro φ
   refine Quotient.inductionOn φ ?_
   intro ts hts
+  change convolutionCoeff (LSeries.toCharacter a) (LSeries.toCharacter b)
+      (ts : LRootedForest α) =
+    convolutionCoeff (LSeries.toCharacter a') (LSeries.toCharacter b') (ts : LRootedForest α)
   rw [convolutionCoeff, convolutionCoeff]
   change
     LForestTensorAlgebra.evalByCharacters (LSeries.toCharacter a) (LSeries.toCharacter b)
@@ -575,11 +578,8 @@ theorem toCharacter_convolution_ofForest_singleton_ofPLTree
 theorem toCharacter_convolution (a b : LSeries α R) :
     toCharacter (convolution a b) =
       LForestAlgebra.Character.convolution (toCharacter a) (toCharacter b) := by
-  ext τ
-  change
-    (toCharacter (convolution a b)).evalForest (LRootedForest.singleton τ) =
-      (LForestAlgebra.Character.convolution (toCharacter a) (toCharacter b)).evalForest
-        (LRootedForest.singleton τ)
+  apply LForestAlgebra.Character.ext
+  intro φ
   rw [toCharacter_evalForest, forestCoeff_convolution,
     LForestAlgebra.Character.convolution_evalForest]
   rfl
