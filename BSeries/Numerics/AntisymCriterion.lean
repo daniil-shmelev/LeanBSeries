@@ -15,73 +15,13 @@ Runge–Kutta scheme (arXiv:2507.21006, Section 8) into finite tableau
 arithmetic: a scheme has antisymmetric order at least `m` iff the
 elementary weights of the composed tableaux `rk ∘ rk` and `rk* ∘ rk`
 agree on all planar trees of order at most `m`.
-
-We also record the classification of rooted trees of order at most two,
-used to turn the order-two conditions into the two weight identities
-`Σ b = 1` and `Σ b c = 1/2`.
 -/
 
 namespace BSeries
 
 open HopfAlgebras
 
-namespace RootedTree
-
-open HopfAlgebras.RootedTree
-
-/-- The unique tree of order one is the one-node tree. -/
-theorem eq_bullet_of_order_one {τ : RootedTree} (h : order τ = 1) :
-    τ = RootedTree.bullet := by
-  have hbr : order τ = RootedForest.order (branches τ) + 1 := by
-    conv_lhs => rw [← RootedForest.graft_branches τ]
-    rw [RootedForest.order_graft]
-    omega
-  have hbr0 : branches τ = 0 :=
-    (RootedForest.order_eq_zero_iff _).1 (by omega)
-  conv_lhs => rw [← RootedForest.graft_branches τ]
-  rw [hbr0, RootedForest.graft_zero]
-
-/-- Order-one forests are the singleton one-node tree. -/
-theorem forest_eq_of_order_one {ρ : RootedForest}
-    (h : RootedForest.order ρ = 1) :
-    ρ = RootedForest.singleton RootedTree.bullet := by
-  have hne : ρ ≠ 0 := by
-    intro h0
-    rw [h0, RootedForest.order_zero] at h
-    omega
-  obtain ⟨a, ha⟩ := Multiset.exists_mem_of_ne_zero hne
-  obtain ⟨s, rfl⟩ := Multiset.exists_cons_of_mem ha
-  have hsplit : (a ::ₘ s : RootedForest) =
-      RootedForest.singleton a + s := rfl
-  rw [hsplit, RootedForest.order_add, RootedForest.order_singleton] at h
-  have hapos := RootedTree.order_pos a
-  have hs : (s : RootedForest) = 0 :=
-    (RootedForest.order_eq_zero_iff _).1 (by omega)
-  have ha1 : order a = 1 := by omega
-  rw [hsplit, hs, add_zero, eq_bullet_of_order_one ha1]
-
-/-- The unique tree of order two is the two-chain. -/
-theorem eq_chain_of_order_two {τ : RootedTree} (h : order τ = 2) :
-    τ = RootedForest.graft (RootedForest.singleton RootedTree.bullet) := by
-  have hbr : order τ = RootedForest.order (branches τ) + 1 := by
-    conv_lhs => rw [← RootedForest.graft_branches τ]
-    rw [RootedForest.order_graft]
-    omega
-  have hbr1 : RootedForest.order (branches τ) = 1 := by omega
-  conv_lhs => rw [← RootedForest.graft_branches τ]
-  rw [forest_eq_of_order_one hbr1]
-
-end RootedTree
-
 namespace RungeKutta
-
-/-- The two-chain rooted tree in `PTree` form. -/
-theorem graft_singleton_bullet :
-    RootedForest.graft (RootedForest.singleton RootedTree.bullet) =
-      RootedTree.ofPTree (PTree.node [PTree.node []]) := by
-  have h := RootedForest.graft_ofPTree_list [PTree.node []]
-  simp only [List.map_cons, List.map_nil] at h
-  exact h
 
 /-- **The composed-weights criterion for antisymmetric order**: by the
 `SC ⟺ EC` theorem, a Runge–Kutta method has antisymmetric order at least

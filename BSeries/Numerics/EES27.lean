@@ -69,16 +69,9 @@ theorem isExplicit_ees27 [Field R] (s x : R) : IsExplicit (ees27 s x) := by
       | rfl
       | exact absurd hij (by decide)
 
-/-- The Williamson 2N coefficients of `EES(2,7;x)`, read off the tableau
-(arXiv:2509.20599, Appendix D): `B = (a₂₁, a₃₂, a₄₃, b₄)` and
-`A_{l+1} = (b_l - a_{l+1,l}) / b_{l+1}` along the subdiagonal. -/
-def ees27LowStorage [Field R] (s x : R) : LowStorage 4 R where
-  A := ![0,
-    ((ees27 s x).A 2 0 - (ees27 s x).A 1 0) / (ees27 s x).A 2 1,
-    ((ees27 s x).A 3 1 - (ees27 s x).A 2 1) / (ees27 s x).A 3 2,
-    ((ees27 s x).b 2 - (ees27 s x).A 3 2) / (ees27 s x).b 3]
-  B := ![(ees27 s x).A 1 0, (ees27 s x).A 2 1, (ees27 s x).A 3 2,
-    (ees27 s x).b 3]
+/-- The Williamson coefficients of `EES(2,7;x)`, recovered from consecutive tableau rows. The shared constructor divides only by subdiagonal entries and the final weight. -/
+def ees27LowStorage [Field R] (s x : R) : LowStorage 4 R :=
+  LowStorage.ofSubdiagonal (ees27 s x)
 
 /-! ### The representative parameter `x = (2-√2)/4`
 
@@ -120,51 +113,27 @@ set_option maxHeartbeats 2000000 in
 /-- All decidable order checks in one `native_decide` (each invocation
 compiles the full tableau closure natively, so they are consolidated). -/
 private theorem ees27r_checks :
-    (weight ees27r PTree.bullet *
-        ((PTree.treeFactorial PTree.bullet : ℕ) : Qsqrt2) = 1 ∧
-      weight ees27r (PTree.node [PTree.node []]) *
-        ((PTree.treeFactorial (PTree.node [PTree.node []]) : ℕ) :
-          Qsqrt2) = 1) ∧
-    (weight ees27r (PTree.node [PTree.node [], PTree.node []]) *
-        ((3 : ℕ) : Qsqrt2) ≠ 1 ∧ ((3 : ℕ) : Qsqrt2) ≠ 0) ∧
+    (weight ees27r PTree.bullet = 1 ∧ weight ees27r PTree.chain2 * 2 = 1) ∧
+    weight ees27r PTree.cherry * 3 ≠ 1 ∧
     (∀ t ∈ (List.range 8).flatMap PTree.treesOfOrder,
       fastWeight ees27rComp t = fastWeight ees27rAdj t) ∧
-    fastWeight ees27rComp (PTree.tallTree 7) ≠
-      fastWeight ees27rAdj (PTree.tallTree 7) ∧
     (∀ i j, ees27rLowStorage.toRK.A i j = ees27r.A i j) ∧
     (∀ j, ees27rLowStorage.toRK.b j = ees27r.b j) := by
   native_decide
 
 /-- `EES(2,7;(2-√2)/4)` has order two (machine-checked). -/
 theorem hasOrder_two_ees27r : HasOrder ees27r 2 := by
-  rw [hasOrder_iff_treeWeight]
-  intro τ hτ
-  have hpos := RootedTree.order_pos τ
-  have h12 : RootedTree.order τ = 1 ∨ RootedTree.order τ = 2 := by omega
-  rcases h12 with h | h
-  · rw [RootedTree.eq_bullet_of_order_one h,
-      show RootedTree.bullet = RootedTree.ofPTree PTree.bullet from rfl,
-      treeWeight_ofPTree, RootedTree.treeFactorial_ofPTree]
-    exact eq_inv_of_mul_eq_one_left ees27r_checks.1.1
-  · rw [RootedTree.eq_chain_of_order_two h, graft_singleton_bullet,
-      treeWeight_ofPTree, RootedTree.treeFactorial_ofPTree]
-    exact eq_inv_of_mul_eq_one_left ees27r_checks.1.2
+  rw [hasOrder_two_iff_hasOrderOne_and_weight_chain2]
+  exact ⟨by simpa [HasOrderOne] using ees27r_checks.1.1,
+    eq_inv_of_mul_eq_one_left ees27r_checks.1.2⟩
 
 /-- `EES(2,7;(2-√2)/4)` does not have order three (cherry witness). -/
 theorem not_hasOrder_three_ees27r : ¬ HasOrder ees27r 3 := by
   intro h
-  rw [hasOrder_iff_treeWeight] at h
-  have hval := h (RootedTree.ofPTree
-    (PTree.node [PTree.node [], PTree.node []])) (by
-      rw [RootedTree.order_ofPTree]
-      rfl)
-  rw [treeWeight_ofPTree, RootedTree.treeFactorial_ofPTree] at hval
-  rw [show (PTree.treeFactorial
-    (PTree.node [PTree.node [], PTree.node []]) : ℕ) = 3 from rfl] at hval
-  refine ees27r_checks.2.1.1 ?_
+  have hval := ((hasOrder_three_iff_hasOrder_two_and_weight_chain3_and_cherry _).mp h).2.2
+  refine ees27r_checks.2.1 ?_
   rw [hval]
-  have h30 := ees27r_checks.2.1.2
-  field_simp
+  norm_num
 
 /-- **`EES(2,7;(2-√2)/4)` has antisymmetric order seven**
 (machine-checked composed-weight identities). -/
@@ -181,18 +150,12 @@ theorem hasAntisymOrder_seven_ees27r :
     materialize_eq, materialize_eq, weight_reindex, weight_reindex] at h
   exact h
 
-/-- `EES(2,7;(2-√2)/4)` does not have antisymmetric order eight: the
-eight-chain is a witness. -/
+/-- The four-stage bound excludes antisymmetric order eight for `EES(2,7;(2-√2)/4)`. -/
 theorem not_hasAntisymOrder_eight_ees27r :
     ¬ ForestAlgebra.Character.HasAntisymOrder
-      (Series.toCharacter (series ees27r)) 8 := by
-  rw [hasAntisymOrder_iff_weight_compose_eq]
-  intro h
-  have h1 := h (PTree.tallTree 7) (by rw [PTree.order_tallTree])
-  have h2 := ees27r_checks.2.2.2.1
-  rw [fastWeight_eq, fastWeight_eq, ees27rComp, ees27rAdj,
-    materialize_eq, materialize_eq, weight_reindex, weight_reindex] at h2
-  exact h2 h1
+      (Series.toCharacter (series ees27r)) 8 :=
+  not_hasAntisymOrder_twice_stages isExplicit_ees27r
+    (hasOrder_two_ees27r.hasOrderOne (by norm_num))
 
 /-- **`EES(2,7;(2-√2)/4)` is an `EES(2,7)` scheme** (arXiv:2507.21006,
 Section 8): explicit, of order exactly two, with antisymmetric order
@@ -207,7 +170,7 @@ Proposition 3.1): the two-register coefficients read off the tableau
 induce it back. -/
 theorem isWilliamson2N_ees27r : IsWilliamson2N ees27r :=
   ⟨ees27rLowStorage,
-    ext ees27r_checks.2.2.2.2.1 ees27r_checks.2.2.2.2.2⟩
+    ext ees27r_checks.2.2.2.1 ees27r_checks.2.2.2.2⟩
 
 end Representative
 
