@@ -454,44 +454,6 @@ end LowStorage
 
 /-! ### Planar order two from the induced tableau -/
 
-private theorem orderList_eq_nil {ts : List PTree}
-    (h : PTree.orderList ts = 0) : ts = [] := by
-  cases ts with
-  | nil => rfl
-  | cons a ts =>
-      rw [PTree.orderList_cons] at h
-      have := PTree.order_pos a
-      omega
-
-/-- The only planar tree of order one is the bullet. -/
-theorem _root_.HopfAlgebras.PTree.eq_bullet_of_order_one {t : PTree}
-    (h : PTree.order t = 1) : t = PTree.bullet := by
-  cases t with
-  | node ts =>
-      have h2 : PTree.order (PTree.node ts) = 1 + PTree.orderList ts :=
-        PTree.order_eq_one_add_orderList_children _
-      have h3 : PTree.orderList ts = 0 := by omega
-      rw [orderList_eq_nil h3]
-      rfl
-
-/-- The only planar tree of order two is the two-chain. -/
-theorem _root_.HopfAlgebras.PTree.eq_chain2_of_order_two {t : PTree}
-    (h : PTree.order t = 2) : t = PTree.chain2 := by
-  cases t with
-  | node ts =>
-      have h2 : PTree.order (PTree.node ts) = 1 + PTree.orderList ts :=
-        PTree.order_eq_one_add_orderList_children _
-      have h3 : PTree.orderList ts = 1 := by omega
-      cases ts with
-      | nil => exact absurd h3 (by decide)
-      | cons a ts' =>
-          rw [PTree.orderList_cons] at h3
-          have ha := PTree.order_pos a
-          have h5 : PTree.orderList ts' = 0 := by omega
-          have h6 : PTree.order a = 1 := by omega
-          rw [orderList_eq_nil h5, PTree.eq_bullet_of_order_one h6]
-          rfl
-
 open LowStorage in
 /-- **Planar order two from the induced tableau weights**: if the induced
 Butcher tableau of a low-storage scheme is consistent (`Σⱼ bⱼ = 1`) and
@@ -505,10 +467,10 @@ theorem hasPlanarOrder_two_of_toRK {R : Type u} [Field R] {s : ℕ} (ls : LowSto
   have hpos := PTree.order_pos τ
   have hcases : PTree.order τ = 1 ∨ PTree.order τ = 2 := by omega
   rcases hcases with h | h
-  · rw [PTree.eq_bullet_of_order_one h, methodChar_bullet, h1,
+  · rw [(PTree.order_eq_one_iff τ).mp h, methodChar_bullet, h1,
       show PTree.treeFactorial PTree.bullet = 1 from rfl]
     norm_num
-  · rw [PTree.eq_chain2_of_order_two h, methodChar_chain2, h2,
+  · rw [(PTree.order_eq_two_iff τ).mp h, methodChar_chain2, h2,
       show PTree.treeFactorial PTree.chain2 = 2 from rfl]
     norm_num
 

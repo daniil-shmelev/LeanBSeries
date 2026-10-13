@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Daniil Shmelev
 -/
 import BSeries.Numerics.Williamson
-import BSeries.Numerics.AntisymCriterion
+import BSeries.Numerics.AntisymStageBound
 import BSeries.Algebra.ComputableRatFunc
 
 /-!
@@ -54,20 +54,15 @@ theorem isExplicit_ees25 [Field R] (x : R) :
   intro i j hij
   fin_cases i <;> fin_cases j <;> simp_all [ees25, threeStageExplicit]
 
-/-- The Williamson 2N coefficients of the `EES(2,5;x)` family
-(arXiv:2509.20599, equations (14)–(15)). -/
-def ees25LowStorage [Field R] (x : R) : LowStorage 3 R where
-  A := ![0, (4 * x ^ 2 - 2 * x + 1) / (2 * (x - 1)),
-    -((4 * x ^ 2 - 2 * x + 1) / ((2 * x - 1) ^ 2 * (2 * x + 1)))]
-  B := ![(2 * x + 1) / (4 * (1 - x)), (1 - x) / (1 - 4 * x ^ 2),
-    (1 - 2 * x) / 2]
+/-- The Williamson coefficients of `EES(2,5;x)`, recovered by the same subdiagonal constructor as EES27. Their simplified formulas are given by `ees25LowStorage_eq_coefficients`. -/
+def ees25LowStorage [Field R] (x : R) : LowStorage 3 R :=
+  LowStorage.ofSubdiagonal (ees25 x)
 
 section Entries
 
 variable [Field R] (x : R)
 
-/-! Entrywise evaluation of the family tableau and its low-storage data;
-each is a definitional reduction of a vector literal. -/
+/-! Entrywise evaluation of the family tableau. The low-storage coefficients are simplified separately under the admissibility assumptions. -/
 
 private theorem famA10 :
     (ees25 x).A 1 0 = (1 + 2 * x) / (4 * (1 - x)) := rfl
@@ -84,23 +79,6 @@ private theorem famB0 : (ees25 x).b 0 = x := rfl
 private theorem famB1 : (ees25 x).b 1 = 1 / 2 := rfl
 
 private theorem famB2 : (ees25 x).b 2 = 1 / 2 - x := rfl
-
-private theorem lsA1 :
-    (ees25LowStorage x).A 1 =
-      (4 * x ^ 2 - 2 * x + 1) / (2 * (x - 1)) := rfl
-
-private theorem lsA2 :
-    (ees25LowStorage x).A 2 =
-      -((4 * x ^ 2 - 2 * x + 1) / ((2 * x - 1) ^ 2 * (2 * x + 1))) := rfl
-
-private theorem lsB0 :
-    (ees25LowStorage x).B 0 = (2 * x + 1) / (4 * (1 - x)) := rfl
-
-private theorem lsB1 :
-    (ees25LowStorage x).B 1 = (1 - x) / (1 - 4 * x ^ 2) := rfl
-
-private theorem lsB2 :
-    (ees25LowStorage x).B 2 = (1 - 2 * x) / 2 := rfl
 
 private theorem famAbscissa0 : abscissa (ees25 x) 0 = 0 :=
   threeStageExplicit_abscissa_zero _ _ _ _ _ _
@@ -172,65 +150,43 @@ private theorem aux_ne_zero (hx1 : x ≠ 1) (hx2 : 2 * x ≠ 1)
     mul_ne_zero (pow_ne_zero 2 h21) h21',
     mul_ne_zero (mul_ne_zero h4 hx1') hq, h8⟩
 
-/-- The closed-form two-register coefficients (14)–(15) induce exactly
-the `EES(2,5;x)` Butcher tableau. -/
+/-- The reconstructed coefficients agree with the simplified formulas of arXiv:2509.20599, equations (14)–(15), for every admissible parameter. -/
+theorem ees25LowStorage_eq_coefficients (hx1 : x ≠ 1) (hx2 : 2 * x ≠ 1)
+    (hx3 : 2 * x ≠ -1) (h2 : (2 : R) ≠ 0) :
+    ees25LowStorage x =
+      { A := ![0, (4 * x ^ 2 - 2 * x + 1) / (2 * (x - 1)),
+          -((4 * x ^ 2 - 2 * x + 1) / ((2 * x - 1) ^ 2 * (2 * x + 1)))],
+        B := ![(2 * x + 1) / (4 * (1 - x)), (1 - x) / (1 - 4 * x ^ 2),
+          (1 - 2 * x) / 2] } := by
+  obtain ⟨h1x, hx1', h12, h21, h21', h4, hq, hq2, _⟩ := aux_ne_zero hx1 hx2 hx3 h2
+  apply congrArg₂ LowStorage.mk <;> funext i <;> fin_cases i <;>
+    simp [rowDifference, rowAfter, ees25, threeStageExplicit] <;>
+    field_simp [h1x, hx1', h12, h21, h21', h2, h4, hq, hq2] <;> ring
+
+/-- The shared row-difference criterion reconstructs the `EES(2,5;x)` tableau, including the admissible zero-weight case `x = 0`. -/
 theorem toRK_ees25LowStorage (hx1 : x ≠ 1) (hx2 : 2 * x ≠ 1)
     (hx3 : 2 * x ≠ -1) (h2 : (2 : R) ≠ 0) :
     (ees25LowStorage x).toRK = ees25 x := by
-  obtain ⟨h1x, hx1', h12, h21, h21', h4, hq, hq2, hcube, h4x, hm2, hbig,
-    hsq, hd1, hd2, hd3, hd4, h8⟩ := aux_ne_zero hx1 hx2 hx3 h2
-  have hk01 : ((0 : Fin 3) : ℕ) + 1 = ((1 : Fin 3) : ℕ) := rfl
-  have hk12 : ((1 : Fin 3) : ℕ) + 1 = ((2 : Fin 3) : ℕ) := rfl
-  have hlast : (ees25LowStorage x).toRK.b 2 =
-      (ees25LowStorage x).B 2 :=
-    LowStorage.toRK_b_last _
-  have ez : ∀ i j : Fin 3, i ≤ j →
-      (ees25LowStorage x).toRK.A i j = (ees25 x).A i j := by
-    intro i j hij
-    rw [LowStorage.toRK_A_of_le _ hij]
-    fin_cases i <;> fin_cases j <;>
-      simp_all [ees25, threeStageExplicit]
-  have e10 : (ees25LowStorage x).toRK.A 1 0 = (ees25 x).A 1 0 := by
-    rw [LowStorage.toRK_A_succ_self _ hk01, lsB0, famA10]
-    ring
-  have e21 : (ees25LowStorage x).toRK.A 2 1 = (ees25 x).A 2 1 := by
-    rw [LowStorage.toRK_A_succ_self _ hk12, lsB1, famA21]
-  have e20 : (ees25LowStorage x).toRK.A 2 0 = (ees25 x).A 2 0 := by
-    rw [LowStorage.toRK_A_of_lt _ hk01 (by decide),
-      LowStorage.toRK_A_succ_self _ hk12, lsB0, lsA1, lsB1, famA20]
-    field_simp [hq2, hcube, h4x, hm2, hbig, hsq, hd1, hd2, hd3, hd4, h8]
-    ring
-  have eb2 : (ees25LowStorage x).toRK.b 2 = (ees25 x).b 2 := by
-    rw [hlast, lsB2, famB2, div_eq_iff h2, sub_mul, one_div,
-      inv_mul_cancel₀ h2]
-    ring
-  have eb1 : (ees25LowStorage x).toRK.b 1 = (ees25 x).b 1 := by
-    rw [LowStorage.toRK_b_succ _ hk12, hlast, lsB1, lsA2, lsB2, famB1]
-    field_simp [hq2, hcube, h4x, hm2, hbig, hsq, hd1, hd2, hd3, hd4, h8]
-    have hD : (1 - x * 2 - x ^ 2 * 4 + x ^ 3 * 8) *
-        (1 - x * 2 - x ^ 2 * 4 + x ^ 3 * 8)⁻¹ = 1 :=
-      mul_inv_cancel₀ hcube
-    linear_combination (-1 + 2 * x - 4 * x ^ 2) * hD
-  have eb0 : (ees25LowStorage x).toRK.b 0 = (ees25 x).b 0 := by
-    rw [LowStorage.toRK_b_succ _ hk01, LowStorage.toRK_b_succ _ hk12, hlast,
-      lsB0, lsA1, lsB1, lsA2, lsB2, famB0]
-    field_simp [hq2, hcube, h4x, hm2, hbig, hsq, hd1, hd2, hd3, hd4, h8]
-    ring
-  refine ext (fun i j => ?_) (fun j => ?_)
-  · fin_cases i <;> fin_cases j
-    · exact ez _ _ (by decide)
-    · exact ez _ _ (by decide)
-    · exact ez _ _ (by decide)
-    · exact e10
-    · exact ez _ _ (by decide)
-    · exact ez _ _ (by decide)
-    · exact e20
-    · exact e21
-    · exact ez _ _ (by decide)
-  · fin_cases j
-    · exact eb0
-    · exact eb1
-    · exact eb2
+  obtain ⟨h1x, hx1', h12, h21, h21', h4, hq, hq2, _⟩ := aux_ne_zero hx1 hx2 hx3 h2
+  apply toRK_ofSubdiagonal_eq_of_rowDifferenceCondition (isExplicit_ees25 x)
+  · intro i
+    fin_cases i
+    · change (1 + 2 * x) / (4 * (1 - x)) ≠ 0
+      exact div_ne_zero (by simpa only [add_comm] using h21') (mul_ne_zero h4 h1x)
+    · change (1 - x) / (1 - 4 * x ^ 2) ≠ 0
+      exact div_ne_zero h1x hq
+    · change (1 / 2 : R) - x ≠ 0
+      intro h
+      field_simp [h2] at h
+      exact h12 (by linear_combination h)
+  · intro i hi j hji
+    have hsum : 1 + x * 2 ≠ 0 := by
+      intro h
+      exact hx3 (by linear_combination h)
+    fin_cases i <;> fin_cases j <;> try omega
+    all_goals
+      simp [rowDifference, rowAfter, ees25, threeStageExplicit] <;>
+      field_simp [h1x, hx1', h12, h21, h21', hsum, h2, h4, hq, hq2] <;> ring
 
 /-- **The entire `EES(2,5;x)` family is Williamson 2N**
 (arXiv:2509.20599, Proposition 3.1), realised by the closed-form
@@ -307,7 +263,9 @@ the exponential weight table sum to the quadrature weights,
 theorem sum_beta_eq_b_ees25LowStorage_tenth :
     ∀ i : Fin 3, (∑ l, (ees25LowStorage (1 / 10 : ℚ)).beta l i) =
       (ees25 (1 / 10 : ℚ)).b i := by
-  native_decide
+  intro i
+  change (ees25LowStorage (1 / 10 : ℚ)).toRK.b i = _
+  rw [toRK_ees25LowStorage (by norm_num) (by norm_num) (by norm_num) (by norm_num)]
 
 /-! ### Stability coefficients
 
@@ -366,29 +324,9 @@ any field of characteristic `≠ 2`. -/
 theorem hasOrder_two_ees25 [Field R] {x : R} (hx1 : x ≠ 1)
     (hx2 : 2 * x ≠ 1) (hx3 : 2 * x ≠ -1) (h2 : (2 : R) ≠ 0) :
     HasOrder (ees25 x) 2 := by
-  rw [hasOrder_iff_treeWeight]
-  intro τ hτ
-  have hpos := RootedTree.order_pos τ
-  have h12 : RootedTree.order τ = 1 ∨ RootedTree.order τ = 2 := by omega
-  rcases h12 with h | h
-  · rw [RootedTree.eq_bullet_of_order_one h,
-      show RootedTree.bullet = RootedTree.ofPTree PTree.bullet from rfl,
-      treeWeight_ofPTree, RootedTree.treeFactorial_ofPTree,
-      show PTree.bullet = PTree.node [] from rfl]
-    have hval : weight (ees25 x) (PTree.node []) = 1 := by
-      rw [show (PTree.node [] : PTree) = PTree.bullet from rfl,
-        weight_bullet]
-      exact weightBullet_ees25 (x := x) h2
-    rw [hval]
-    norm_num [PTree.treeFactorial]
-  · rw [RootedTree.eq_chain_of_order_two h, graft_singleton_bullet,
-      treeWeight_ofPTree, RootedTree.treeFactorial_ofPTree]
-    have hval : weight (ees25 x) (PTree.node [PTree.node []]) = 1 / 2 :=
-      weight_chain2_ees25 hx1 hx2 hx3 h2
-    rw [hval,
-      show (PTree.treeFactorial (PTree.node [PTree.node []]) : ℕ) = 2 from
-        rfl, one_div]
-    norm_num
+  apply (hasOrder_two_iff_hasOrderOne_and_weight_chain2 _).mpr
+  exact ⟨weightBullet_ees25 h2,
+    by simpa only [one_div] using weight_chain2_ees25 hx1 hx2 hx3 h2⟩
 
 /-! ### The generic parameter: `EES(2,5;X)` is an EES(2,5) scheme
 
@@ -420,22 +358,12 @@ fails as an identity of rational functions. -/
 theorem not_hasOrder_three_ees25_generic :
     ¬ HasOrder (ees25 (X : CRatFunc ℚ)) 3 := by
   intro h
-  rw [hasOrder_iff_treeWeight] at h
-  have hval := h (RootedTree.ofPTree
-    (PTree.node [PTree.node [], PTree.node []])) (by
-      rw [RootedTree.order_ofPTree]
-      rfl)
-  rw [treeWeight_ofPTree, RootedTree.treeFactorial_ofPTree] at hval
-  rw [show (PTree.treeFactorial
-    (PTree.node [PTree.node [], PTree.node []]) : ℕ) = 3 from rfl] at hval
-  have hne : weight (ees25 (X : CRatFunc ℚ))
-      (PTree.node [PTree.node [], PTree.node []]) *
-      ((3 : ℕ) : CRatFunc ℚ) ≠ 1 := by
+  have hval := ((hasOrder_three_iff_hasOrder_two_and_weight_chain3_and_cherry _).mp h).2.2
+  have hne : weight (ees25 (X : CRatFunc ℚ)) PTree.cherry * 3 ≠ 1 := by
     native_decide
   refine hne ?_
   rw [hval]
-  have h30 : ((3 : ℕ) : CRatFunc ℚ) ≠ 0 := by native_decide
-  field_simp
+  norm_num
 
 set_option maxHeartbeats 2000000 in
 private theorem weight_compose_eq_ees25_generic :
@@ -456,21 +384,12 @@ theorem hasAntisymOrder_five_ees25_generic :
   refine List.mem_flatMap.2 ⟨PTree.order t, ?_, PTree.mem_treesOfOrder t⟩
   exact List.mem_range.2 (by have := PTree.order_pos t; omega)
 
-set_option maxHeartbeats 2000000 in
-/-- `EES(2,5;X)` does not have antisymmetric order six: the six-chain is
-a witness at the generic parameter. -/
+/-- The three-stage bound excludes antisymmetric order six for `EES(2,5;X)`. -/
 theorem not_hasAntisymOrder_six_ees25_generic :
     ¬ ForestAlgebra.Character.HasAntisymOrder
-      (Series.toCharacter (series (ees25 (X : CRatFunc ℚ)))) 6 := by
-  rw [hasAntisymOrder_iff_weight_compose_eq]
-  intro h
-  have h1 := h (PTree.tallTree 5) (by rw [PTree.order_tallTree])
-  have h2 : weight (compose (ees25 (X : CRatFunc ℚ)) (ees25 X))
-      (PTree.tallTree 5) ≠
-      weight (compose (adjointScheme (ees25 X)) (ees25 X))
-        (PTree.tallTree 5) := by
-    native_decide
-  exact h2 h1
+      (Series.toCharacter (series (ees25 (X : CRatFunc ℚ)))) 6 :=
+  not_hasAntisymOrder_twice_stages (isExplicit_ees25 _)
+    (weightBullet_ees25 (by norm_num))
 
 /-- **The `EES(2,5;x)` family is an `EES(2,5)` scheme at the generic
 parameter** (arXiv:2507.21006, Section 8): explicit, of order exactly

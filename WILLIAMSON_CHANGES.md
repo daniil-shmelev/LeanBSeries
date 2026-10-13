@@ -1,0 +1,6 @@
+- Prove `williamson_of_hasAntisymOrder` and the minimal-stage EES corollary using a spectral three-term recurrence.
+- Share division-free reconstruction between the complementary Bazavov and subdiagonal constructors.
+- Use subdiagonal reconstruction for EES25/EES27, preserving their formulas and allowing earlier output weights to vanish.
+- Organize Williamson theory into focused modules and extract reusable matrix, polynomial, and stability lemmas.
+- Reuse Mathlib and existing order criteria; remove duplicated tree classifications and numerical checks.
+- Full `lake build` passes; the main theorem and corollary use only standard Lean axioms.
