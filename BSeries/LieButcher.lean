@@ -4,3 +4,7 @@ import BSeries.LieButcher.CFEESOrder
 import BSeries.LieButcher.PreLie
 import BSeries.LieButcher.Algebra
 import BSeries.LieButcher.PlanarBranchedBridge
+import BSeries.LieButcher.ForestOrder
+import BSeries.LieButcher.Order
+import BSeries.LieButcher.CommutatorFreeSeries
+import BSeries.LieButcher.WilliamsonOrderTransfer
